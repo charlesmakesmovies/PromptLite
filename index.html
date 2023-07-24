@@ -56,10 +56,10 @@
   </div>
   <h1>PromptLite</h1>
   <div>
-  <span id="countdownLabel">Countdown:</span>
+  <span id="countdownLabel">Countdown Timer:</span>
   <span id="countdown"></span>
 </div>
-
+<br>
   <div>
     <textarea id="inputText" rows="4" cols="50" placeholder="Enter your text here" style="background-color:#323232;"></textarea><br>
     <label for="scrollSpeedSlider">Scroll Speed:</label>
@@ -76,7 +76,11 @@
     <button onclick="mirrorText()">Mirror Text</button>
     <button onclick="flipText()">Flip Text</button>
 <br>
-<p>A couple quick notes: the prompter box is fluid and will adjust width based on the browser window size, so that the text stays centred. You might need to play around with the scroll speed, font size, and line spacing to find the speed that works best for you. If you're using an actual teleprompter setup, you can use the mirror and flip text buttons to adjust the text so that it's correctly oriented in the glass.</p>
+<p>A couple quick notes: the prompter box is fluid and will adjust width based on the browser window size, so that the text stays centred and keeps your eyes from moving back and forth too much.</p>
+    <p>The restart button does not automatically start playback.</p>
+    <p>If you're using an actual prompter setup, you can use the mirror and flip buttons to correctly orient the text.</p>
+    <br>
+    <p>This app was coded with assistance from chatGPT.</p>
   </div><br>
      
 <script>
