@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Promptlite</title>
+  // Version 2 adds controllers to change the scrollarea 
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+    }
+    * {
+       color: #ffffff;
+    }
+
+    button {
+       Background-color: #323232;
+    }
+
+    #textContainer {
+      border: 1px solid #ccc;
+      width: 100%;
+      height: 200px;
+      overflow: hidden;
+      margin: 0px;
+      margin-bottom: 20px;
+    }
+
+    #scrollingText {
+      line-height: 2.0;
+      font-size: 24px;
+    }
+
+    #countdown {
+      font-size: 24px;
+      text-align: left;
+      margin-top: 10px;
+    }
+
+.mirror {
+  transform: scaleX(-1);
+}
+
+.flip {
+  transform: rotate(180deg);
+}
+
+.content {
+  width: 100%;
+  margin: auto;
+}
+
+  </style>
+</head>
+<body bgcolor="#323232">
+  <div class="content">
+  <div id="textContainer">
+    <div id="scrollingText"></div>
+  </div>
+  <h1>PromptLite</h1>
+  <div>
+  <span id="countdownLabel">Countdown Timer:</span>
+  <span id="countdown"></span>
+</div>
+<br>
+  <div>
+    <textarea id="inputText" rows="4" cols="50" placeholder="Enter your text here" style="background-color:#323232;"></textarea><br>
+    <label for="scrollSpeedSlider">Scroll Speed:</label>
+    <input type="range" id="scrollSpeedSlider" min="1" max="100" value="3"><span id="scrollSpeedValue">3</span> pixels/second<br>
+    <label for="fontSizeSlider">Font Size:</label>
+    <input type="range" id="fontSizeSlider" min="10" max="48" value="24"><span id="fontSizeValue">24</span> px<br>
+    <label for="lineSpacingSlider">Line Spacing:</label>
+    <input type="range" id="lineSpacingSlider" min="1" max="5" step="0.1" value="2"><span id="lineSpacingValue">2.0</span><br><br>
+    <label for="countdownLengthSlider">Countdown Length:</label>
+    <input type="range" id="countdownLengthSlider" min="1" max="15" value="3"><span id="countdownLengthValue">3</span> seconds<br><br>
+    <label for="textContainerHeightSlider">Container Height:</label>
+    <input type="range" id="textContainerHeightSlider" min="100" max="1000" value="200"><span id="textContainerHeightValue">200</span> px<br>
+    <label for="textContainerWidthSlider">Container Width:</label>
+    <input type="range" id="textContainerWidthSlider" min="10" max="100" value="80"><span id="textContainerWidthValue">80</span> %<br>
+
+    <button onclick="startCountdown()">Start</button>
+    <button onclick="stopTeleprompter()">Stop</button>
+    <button onclick="restartTeleprompter()">Restart</button>
+    <button onclick="mirrorText()">Mirror Text</button>
+    <button onclick="flipText()">Flip Text</button>
+<br>
+    <p>The restart button does not automatically start playback.</p>
+    <p>If you're using an actual prompter setup, you can use the mirror and flip buttons to correctly orient the text.</p>
+    <br>
+    <p>This app was coded with assistance from chatGPT.</p>
+  </div><br>
+     
+<script>
+  const scrollingTextElement = document.getElementById('scrollingText');
+  const inputTextElement = document.getElementById('inputText');
+  const scrollSpeedSlider = document.getElementById('scrollSpeedSlider');
+  const scrollSpeedValueElement = document.getElementById('scrollSpeedValue');
+  const fontSizeSlider = document.getElementById('fontSizeSlider');
+  const fontSizeValueElement = document.getElementById('fontSizeValue');
+  const lineSpacingSlider = document.getElementById('lineSpacingSlider');
+  const lineSpacingValueElement = document.getElementById('lineSpacingValue');
+  const countdownElement = document.getElementById('countdown');
+  const countdownLengthSlider = document.getElementById('countdownLengthSlider');
+  const countdownLengthValueElement = document.getElementById('countdownLengthValue');
+const textContainerElement = document.getElementById('textContainer');
+const textContainerHeightSlider = document.getElementById('textContainerHeightSlider');
+const textContainerHeightValueElement = document.getElementById('textContainerHeightValue');
+const textContainerWidthSlider = document.getElementById('textContainerWidthSlider');
+const textContainerWidthValueElement = document.getElementById('textContainerWidthValue');
+
+  let animationId = null;
+  let currentScrollPosition = 0;
+  let scrollSpeed = parseInt(scrollSpeedSlider.value);
+  let fontSize = parseInt(fontSizeSlider.value);
+  let lineSpacing = parseFloat(lineSpacingSlider.value);
+  let lastTimestamp = null;
+  let countdownLength = parseInt(countdownLengthSlider.value);
+  let countdownInterval = null;
+  let textContainerHeight = parseInt(textContainerHeightSlider.value);
+  let textContainerWidth = parseInt(textContainerWidthSlider.value);
+
+  function startCountdown() {
+    countdownElement.textContent = countdownLength;
+    countdownInterval = setInterval(() => {
+      countdownLength -= 1;
+      countdownElement.textContent = countdownLength;
+      if (countdownLength <= 0) {
+        clearInterval(countdownInterval);
+        startTeleprompter();
+      }
+    }, 1000);
+  }
+
+  function startTeleprompter() {
+    countdownElement.textContent = '';
+    stopTeleprompter();
+    const textToScroll = inputTextElement.value.trim();
+    if (textToScroll) {
+      scrollingTextElement.textContent = '';
+
+      // Add two line breaks
+      for (let i = 0; i < 2; i++) {
+        const lineBreak = document.createElement('br');
+        scrollingTextElement.appendChild(lineBreak);
+      }
+
+      // Append the user-input text
+      const userText = document.createTextNode(textToScroll);
+      scrollingTextElement.appendChild(userText);
+
+      scrollSpeed = parseInt(scrollSpeedSlider.value);
+      fontSize = parseInt(fontSizeSlider.value);
+      lineSpacing = parseFloat(lineSpacingSlider.value);
+      scrollingTextElement.style.fontSize = `${fontSize}px`;
+      scrollingTextElement.style.lineHeight = `${lineSpacing}`;
+      requestAnimationFrame(scrollText);
+    } else {
+      alert("Please enter text to scroll.");
+    }
+  }
+
+  function stopTeleprompter() {
+    cancelAnimationFrame(animationId);
+    clearInterval(countdownInterval);
+    lastTimestamp = null;
+  }
+
+  function restartTeleprompter() {
+    stopTeleprompter();
+    scrollingTextElement.textContent = '';
+    currentScrollPosition = 0;
+    countdownLength = parseInt(countdownLengthSlider.value);
+    countdownElement.textContent = countdownLength.toString();
+  }
+
+  function scrollText(timestamp) {
+    if (!lastTimestamp) {
+      lastTimestamp = timestamp;
+    }
+
+    const elapsed = timestamp - lastTimestamp;
+    const distanceToScroll = elapsed * scrollSpeed / 1000; // pixels per second
+    currentScrollPosition -= distanceToScroll;
+
+    const flip = scrollingTextElement.classList.contains('flip') ? 'rotate(180deg)' : '';
+    const mirror = scrollingTextElement.classList.contains('mirror') ? 'scaleX(-1)' : '';
+
+    scrollingTextElement.style.transform = `translateY(${currentScrollPosition}px) ${flip} ${mirror}`;
+
+    // Reset the scroll position when the text is fully scrolled
+    if (currentScrollPosition <= -scrollingTextElement.clientHeight) {
+      currentScrollPosition = 0;
+    }
+
+    lastTimestamp = timestamp;
+    animationId = requestAnimationFrame(scrollText);
+  }
+
+  function mirrorText() {
+    if (scrollingTextElement.classList.contains('mirror')) {
+      scrollingTextElement.classList.remove('mirror');
+    } else {
+      scrollingTextElement.classList.add('mirror');
+    }
+  }
+
+  function flipText() {
+    if (scrollingTextElement.classList.contains('flip')) {
+      scrollingTextElement.classList.remove('flip');
+    } else {
+      scrollingTextElement.classList.add('flip');
+    }
+  }
+
+  // Update the displayed scroll speed value when the slider changes
+  scrollSpeedSlider.addEventListener('input', () => {
+    scrollSpeed = parseInt(scrollSpeedSlider.value);
+    scrollSpeedValueElement.textContent = scrollSpeed;
+  });
+
+  // Update the displayed font size value when the slider changes
+  fontSizeSlider.addEventListener('input', () => {
+    fontSize = parseInt(fontSizeSlider.value);
+    fontSizeValueElement.textContent = fontSize;
+    scrollingTextElement.style.fontSize = `${fontSize}px`;
+  });
+
+  // Update the displayed line spacing value when the slider changes
+  lineSpacingSlider.addEventListener('input', () => {
+    lineSpacing = parseFloat(lineSpacingSlider.value);
+    lineSpacingValueElement.textContent = lineSpacing;
+    scrollingTextElement.style.lineHeight = `${lineSpacing}`;
+  });
+
+  // Update the displayed countdown length value when the slider changes
+  countdownLengthSlider.addEventListener('input', () => {
+    countdownLength = parseInt(countdownLengthSlider.value);
+    countdownLengthValueElement.textContent = countdownLength;
+  });
+
+// Update the displayed container height value and actual height when the slider changes
+textContainerHeightSlider.addEventListener('input', () => {
+  textContainerHeight = parseInt(textContainerHeightSlider.value);
+  textContainerHeightValueElement.textContent = textContainerHeight;
+  textContainerElement.style.height = `${textContainerHeight}px`;
+});
+
+// Update the displayed container width value and actual width when the slider changes
+textContainerWidthSlider.addEventListener('input', () => {
+  textContainerWidth = parseInt(textContainerWidthSlider.value);
+  textContainerWidthValueElement.textContent = textContainerWidth;
+  textContainerElement.style.width = `${textContainerWidth}%`;
+});
+
+</script>
+  </div>
+</body>
+</html>
